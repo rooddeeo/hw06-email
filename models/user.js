@@ -7,6 +7,10 @@ export const registerSchema = Joi.object({
 	password: Joi.string().min(3).required(),
 }).options({ abortEarly: false });
 
+export const verifyEmailSchema = Joi.object({
+	email: Joi.string().required(),
+});
+
 export const loginSchema = Joi.object({
 	email: Joi.string().required(),
 	password: Joi.string().min(3).required(),
@@ -39,7 +43,7 @@ const userAuthSchema = new Schema({
 		type: Boolean,
 		default: false,
 	},
-	verification: {
+	verificationCode: {
 		type: String,
 		default: "",
 	},

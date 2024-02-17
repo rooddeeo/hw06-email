@@ -29,7 +29,7 @@ export const register = async (req, res) => {
 		const newUser = await AuthUser.create({ ...req.body, password: hashPassword, avatarURL, verificationCode });
 		const verifyEmail = {
 			to: email,
-			subject: "Veryfy email",
+			subject: "Verify email",
 			html: `<a target="_blank" href="${BASE_URL}/api/users/verify/${verificationCode}">Click verify email</a>`,
 		};
 		await sendEmail(verifyEmail);
@@ -46,12 +46,48 @@ export const register = async (req, res) => {
 	}
 };
 
+export const verifyEmail = async (req, res) => {
+	const { verificationCode } = req.params;
+	const user = await AuthUser.findOne({ verificationCode });
+	if (!user) {
+		throw HttpError(401, "Email not found");
+	}
+	await AuthUser.findByIdAndUpdate(user._id, { verify: true, verificationCode: "" });
+	res.json({
+		message: "Email verify success",
+	});
+};
+
+export const resendVerifyEmail = async (req, res) => {
+	const { email } = req.body;
+	const user = await AuthUser.findOne({ email });
+	if (!user) {
+		throw HttpError(401, "Email not found");
+	}
+	if (user.verify) {
+		throw HttpError(401, "Email already verify");
+	}
+	const verifyEmail = {
+		to: email,
+		subject: "Verify email",
+		html: `<a target="_blank" href="${BASE_URL}/api/users/verify/${user.verificationCode}">Click verify email</a>`,
+	};
+	await sendEmail(verifyEmail);
+	res.json({
+		message: "Verify email send success",
+	});
+};
+
 export const login = async (req, res) => {
 	try {
 		const { email, password } = req.body;
 		const user = await AuthUser.findOne({ email });
 		if (!user) {
 			throw HttpError(401, "Email or password invalid");
+		}
+
+		if (!user.verify) {
+			throw HttpError(401, "Email is not verified");
 		}
 
 		const passwordCompare = await bcrypt.compare(password, user.password);
