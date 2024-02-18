@@ -1,6 +1,5 @@
 import { model, Schema } from "mongoose";
 import Joi from "joi";
-import crypto from "crypto";
 
 export const registerSchema = Joi.object({
 	email: Joi.string().required(),
@@ -39,7 +38,7 @@ const userAuthSchema = new Schema({
 		type: String,
 		required: true,
 	},
-	verity: {
+	verify: {
 		type: Boolean,
 		default: false,
 	},
